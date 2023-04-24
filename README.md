@@ -37,4 +37,20 @@
         7. Both users also will exchange location information about their computer over the signaling channel
         8. The connection will either succeed or fail between the users. 
 3. Session description protocol 
-   
+    - Tại sao nó xuất hiện: để get connected with another user bạn cần biết một vài thông tin như là: audio and video codecs support là gì?, network như thế nào? bao nhiêu data máy tính có thể xử lý?
+    - The SDP is a string-based data blob provided by the browser => the format of this string is a set of key-value pairs
+    ```js
+    <key>=<value>\n
+    ```
+    `key`: is a single character that establishes the type of value this is.
+    `value`: is structured set of text that comprises a machine-readable configuration value 
+    - The difference key-value pairs are then split by line breaks 
+    - The SDP will cover the description, timing configuration, and media constraints for given user
+    - Được đưa trong quá trình thiết lập kết nối với user khác 
+    - nó giống như một business card để computer của bạn có thể kết nối với other user
+4. Finding a clear route to another user 
+    - Session Traversal Utilities for NAT (STUN)
+        - là bước đầu tiên tìm kiếm good connection between two peers. 
+    - Traversal Using Relays around NAT(TURN)
+    - Interactive Connectivity Establishment(ICE)
+    ![visualize how the layout of a typical WebRTC connection process looks like](https://scontent.fbmv1-1.fna.fbcdn.net/v/t1.15752-9/342210549_1270428673871372_1242750448622378645_n.png?_nc_cat=110&ccb=1-7&_nc_sid=ae9488&_nc_ohc=3riW-auX_I0AX-72KG6&_nc_ht=scontent.fbmv1-1.fna&oh=03_AdRTiGUHI3YubMPFPo1tziyUBxqh22uz_ooi-68jujJpZA&oe=646E1371)
