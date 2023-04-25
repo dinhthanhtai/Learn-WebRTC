@@ -54,3 +54,6 @@
     - Traversal Using Relays around NAT(TURN)
     - Interactive Connectivity Establishment(ICE)
     ![visualize how the layout of a typical WebRTC connection process looks like](https://scontent.fbmv1-1.fna.fbcdn.net/v/t1.15752-9/342210549_1270428673871372_1242750448622378645_n.png?_nc_cat=110&ccb=1-7&_nc_sid=ae9488&_nc_ohc=3riW-auX_I0AX-72KG6&_nc_ht=scontent.fbmv1-1.fna&oh=03_AdRTiGUHI3YubMPFPo1tziyUBxqh22uz_ooi-68jujJpZA&oe=646E1371)
+
+## Series of state to build in WebRTC 
+![steps build in WebRTC](https://scontent.fbmv1-1.fna.fbcdn.net/v/t1.15752-9/342576202_202534545867773_686864177804318672_n.png?_nc_cat=100&ccb=1-7&_nc_sid=ae9488&_nc_ohc=tDu_CP3nlTUAX-VErvH&_nc_ht=scontent.fbmv1-1.fna&oh=03_AdTtHvreDdFpByxleXV-p4UXDTlwBsx5jFGerRrPoVbtgw&oe=646E1073)

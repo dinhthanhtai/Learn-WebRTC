@@ -1,45 +1,94 @@
-function hasUserMedia () {
-    return !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGeneric || navigator.mozGetUserMedia || navigator.webkitGeneric || navigator.msGetUserMedia) 
+function hasUserMedia() {
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    return !!navigator.getUserMedia;
 }
 
-var constraints = {
-    video: {
-        mandatory: {
-            minWith: 640,
-            minHeight: 480,
-        }
-    },
-    audio: true
+function hasRTCPeerConnection() {
+    window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+
+    return !!window.RTCPeerConnection;
 }
 
-if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera mini/i.test(navigator.userAgent)) {
-    console.log('true ne')
-    constraints = {
-        video: {
-            mandatory: {
-                minWith: 480,
-                minHeight: 320,
-                maxWidth: 1024,
-                maxHeight: 768
-            }
-        },
-        audio: true
-    }
-}
+var yourVideo = document.querySelector('#yours');
+var theirVideo = document.querySelector('#theirs');
+var yourConnection, theirConnection;
 
 if (hasUserMedia()) {
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.webkitGeneric;
+    navigator.getUserMedia({
+        video: true, 
+        audio: false
+    }, function (stream) {
+        window.stream = stream;
+        yourVideo.srcObject = stream;
 
-    navigator.getUserMedia(constraints, function (stream) {
-        console.log("🚀 ~ file: main.js:9 ~ stream:", stream)
-        var video = document.querySelector('video');
-        const videoTracks = stream.getVideoTracks();
-        console.log("🚀 ~ file: main.js:25 ~ videoTracks:", videoTracks)
-        console.log(`Using video device: ${videoTracks[0].label}`);
-        window.stream = stream; // make variable available to browser console
-        video.srcObject = stream;
-    }, function (err) {})
+        if (hasRTCPeerConnection()) {
+            startPeerConnection(stream);
+        } else {
+            alert('Sorry, your browser does not support web RTC.')
+        }
+    }, function (error) {
+        alert('Sorry, we failed to capture your camera, please try again.');
+    })
 } else {
-    alert('Sorry, your browser does not support getUserMedia');
+    alert('Sorry, your browser does not support webRTC.')
 }
 
+function startPeerConnection(stream) {
+    var configuration = {
+        "iceServers": [{ "url": "stun:stun.1.google.com:19302"}]
+    };
+
+    yourConnection = new webkitRTCPeerConnection(configuration);
+    theirConnection = new webkitRTCPeerConnection(configuration);
+
+    let inboundStream = null;
+
+
+    // Set up stream listening
+    for (const track of stream.getTracks()) {
+        yourConnection.addTrack(track);
+    } 
+    theirConnection.ontrack = function (ev) {
+        console.log('caller recived new stream');
+        if (ev.streams && ev.streams[0]) {
+            videoElem.srcObject = ev.streams[0];
+          } else {
+            if (!inboundStream) {
+              inboundStream = new MediaStream();
+              console.log("🚀 ~ file: main.js:59 ~ startPeerConnection ~ inboundStream:", inboundStream)
+              theirVideo.srcObject = inboundStream;
+            }
+            inboundStream.addTrack(ev.track);
+          }
+        console.log(ev)
+    }
+
+
+    
+
+    // Setup ice handling 
+    yourConnection.onicecandidate = function (event) {
+        if (event.candidate) {
+            theirConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+        }
+    }
+
+    theirConnection.onicecandidate = function (event) {
+        if (event.candidate) {
+            yourConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+        }
+    }
+
+    function error () { console.log('There was an error'); };
+
+    yourConnection.createOffer(function (offer) { console.log('Offer:'); console.log(offer);
+        yourConnection.setLocalDescription(offer);
+        theirConnection.setRemoteDescription(offer);
+
+        theirConnection.createAnswer(function (answer) { console.log('Answer:'); console.log(answer);
+            theirConnection.setLocalDescription(answer);
+            yourConnection.setRemoteDescription(answer);
+        }, error);
+    }, error);
+}
