@@ -1,0 +1,23 @@
+{
+  "name": "learning-webrtc",
+  "version": "1.0.0",
+  "description": "## Understanding UDP transport and real-time transfer  - Real-time transfer of data thì cần phải fast connection speed => việc cập nhật data xảy ra liên tục, có thể hao hụt hoặc thiếu sót dữ liệu.  - **User Datagram Protocol (UDP)** sẽ là lựa chọn tốt đối với WebRPT applications => dealing with high-performance      - It does not guarantee the order your data is sent in or the order in which it will arrive on the other side      - It does not guarantee that every packet of data will make it to the other side; some may get lost along the way      - It doest not track the state of every single data packet and will continue to send data event if data has been lost by the other client",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinhthanhtai/Learn-WebRTC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dinhthanhtai/Learn-WebRTC/issues"
+  },
+  "homepage": "https://github.com/dinhthanhtai/Learn-WebRTC#readme",
+  "dependencies": {
+    "ws": "^8.13.0"
+  }
+}

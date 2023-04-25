@@ -1,45 +1,120 @@
-function hasUserMedia () {
-    return !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGeneric || navigator.mozGetUserMedia || navigator.webkitGeneric || navigator.msGetUserMedia) 
-}
+var WebSocketServer = require('ws').Server;
+var wss = new WebSocketServer({ port: 8888});
 
-var constraints = {
-    video: {
-        mandatory: {
-            minWith: 640,
-            minHeight: 480,
+users = {};
+
+wss.on('connection', function (connection) {
+    console.log("User connected");
+
+    connection.on('message', function (message) {
+        var data;
+
+        try {
+            data = JSON.parse(message);
+        } catch (e) {
+            console.log("Error parsing JSON message: ");
+            data = {};
+            
         }
-    },
-    audio: true
-}
 
-if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera mini/i.test(navigator.userAgent)) {
-    console.log('true ne')
-    constraints = {
-        video: {
-            mandatory: {
-                minWith: 480,
-                minHeight: 320,
-                maxWidth: 1024,
-                maxHeight: 768
+        switch (data.type) {
+            case 'login':
+                console.log('user logged in as', data.name);
+                if (users[data.name]) {
+                    sendTo(connection, {
+                        type: 'login',
+                        success: false
+                    })
+                } else {
+                    users[data.name] = connection;
+                    connection.name = data.name;
+                    sendTo(connection, {
+                        type: 'login',
+                        success: true
+                    })
+                }
+
+                break;
+            case 'offer': 
+                console.log('sending offer to', data.name);
+                var conn = users[data.name];
+
+                if(conn != null) {
+                    connection.otherName = data.name;
+                    sendTo(conn, {
+                        type: 'offer',
+                        offer: data.offer,
+                        name: connection.name
+                    })
+                }
+                break;
+            case 'answer': 
+                console.log('sending answer to', data.name);
+                var conn = users[data.name];
+
+                if (conn != null) {
+                    connection.otherName = data.name;
+                    sendTo(conn, {
+                        type: 'answer',
+                        answer: data.answer,
+                    })
+                }
+                break;
+            case "candidate": 
+                console.log('sending candidate to', data.name);
+                var conn = users[data.name];
+
+                if (conn!= null) {
+                    sendTo(conn, {
+                        type: "candidate",
+                        candidate: data.candidate
+                    })
+                }
+                break;
+            case "leave": 
+                console.log('sending leave to', data.name);
+                var conn = users[data.name];
+                conn.otherName = null;
+
+                if (conn != null) {
+                    sendTo(conn, {
+                        type: 'leave'
+                    })
+                }
+                break;
+            default:
+                sendTo(connection, {
+                    type: 'error',
+                    message: 'Unknown message type' + data.type
+                });
+                break;
+        }
+    })
+
+    connection.on('close', function () {
+        if(connection.name) {
+            delete users[connection.name];
+
+            if (connection.otherName) {
+                console.log('disconnecting from', connection.otherName);
+
+                var conn = users[connection.otherName];
+                conn.otherName = null;
+
+                if (conn != null) {
+                    sendTo(conn, {
+                        type: 'leave'
+                    })
+                }
             }
-        },
-        audio: true
-    }
+        }
+    });
+});
+
+function sendTo(connection, message) {
+    connection.send(JSON.stringify(message));
 }
 
-if (hasUserMedia()) {
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.webkitGeneric;
-
-    navigator.getUserMedia(constraints, function (stream) {
-        console.log("🚀 ~ file: main.js:9 ~ stream:", stream)
-        var video = document.querySelector('video');
-        const videoTracks = stream.getVideoTracks();
-        console.log("🚀 ~ file: main.js:25 ~ videoTracks:", videoTracks)
-        console.log(`Using video device: ${videoTracks[0].label}`);
-        window.stream = stream; // make variable available to browser console
-        video.srcObject = stream;
-    }, function (err) {})
-} else {
-    alert('Sorry, your browser does not support getUserMedia');
-}
-
+wss.on('listening', function() {
+    console.log("server started...")
+})
