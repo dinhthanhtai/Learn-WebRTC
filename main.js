@@ -74,7 +74,9 @@ wss.on('connection', function (connection) {
             case "leave": 
                 console.log('sending leave to', data.name);
                 var conn = users[data.name];
-                conn.otherName = null;
+                if (conn.otherName) {
+                    conn.otherName = null;
+                }
 
                 if (conn != null) {
                     sendTo(conn, {
